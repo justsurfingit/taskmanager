@@ -13,11 +13,11 @@ const getTasks = async (req, res) => {
 const createTask = async (req, res) => {
   // res.send(req.body);
   try {
-    await Tasks.create({
+    const neo = await Tasks.create({
       name: req.body.name,
       completed: req.body.completed,
     });
-    res.status(200).send(req.body);
+    res.status(200).json({ neo });
   } catch (err) {
     res.send(err);
   }
@@ -33,32 +33,33 @@ const getTask = async (req, res) => {
       res.status(404).send("task not found");
       return;
     }
-    res.status(200).send({ task });
+    res.status(200).json({ task });
   } catch (err) {
     res.send(err);
   }
 };
 const updateTask = async (req, res) => {
-  // res.send("task created");
-  //this is also easy and easy
   try {
     const { id: taskID } = req.params;
-    console.log(taskID);
-    console.log(req.body);
-    const neo = await Tasks.findOneAndUpdate({ _id: taskID }, req.body, {
-      new: true,
-      // runValidators: true,
-    });
-    if (!neo) {
-      res.status(404).send("task not found");
-      return;
+    const { name, completed } = req.body;
+
+    const updatedTask = await Tasks.findOneAndUpdate(
+      { _id: taskID },
+      { name, completed },
+      { new: true }
+    );
+
+    if (!updatedTask) {
+      return res.status(404).json({ error: "Task not found" });
     }
-    //this await is important
-    res.status(200).json({ neo });
+
+    return res.status(200).json({ task: updatedTask });
   } catch (err) {
-    res.send(err);
+    console.error(err);
+    return res.status(500).json({ error: "An error occurred" });
   }
 };
+
 const deleteTask = async (req, res) => {
   try {
     const { id: taskID } = req.params;
@@ -67,7 +68,7 @@ const deleteTask = async (req, res) => {
       res.status(404).send("task not found");
       return;
     }
-    res.send(task);
+    res.json({ task });
   } catch (err) {
     res.send(err);
   }
